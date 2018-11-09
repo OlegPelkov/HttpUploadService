@@ -7,6 +7,8 @@ import org.springframework.boot.web.server.ErrorPage;
 import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 @SpringBootApplication
 public class SpringBootDemoApplication {
@@ -24,4 +26,13 @@ public class SpringBootDemoApplication {
         factory.addErrorPages(new ErrorPage(HttpStatus.NOT_FOUND, "/notfound.html"));
         return factory;
     }
+
+    //mvc  - https://www.baeldung.com/spring-file-upload
+    @Bean(name = "multipartResolver")
+    public CommonsMultipartResolver multipartResolver() {
+        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+        multipartResolver.setMaxUploadSize(100000);
+        return multipartResolver;
+    }
+
 }
