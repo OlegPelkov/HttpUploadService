@@ -10,10 +10,27 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
+import java.io.*;
+
 @SpringBootApplication
 public class SpringBootDemoApplication {
 
     public static void main(String[] args) {
+    /*    byte[] b = new byte[1024];
+        for(byte b1 : b){
+            b1 = 34;
+        }
+        b[0]=32;
+        b[1023]=33;
+        try {
+            File f = new File("");
+            OutputStream is = new BufferedOutputStream(new FileOutputStream(f.getAbsolutePath()+File.pathSeparator+"test.zip"));
+            is.write(b);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
         SpringApplication.run(SpringBootDemoApplication.class, args);
     }
 
@@ -21,8 +38,8 @@ public class SpringBootDemoApplication {
     public ConfigurableServletWebServerFactory webServerFactory()
     {
         JettyServletWebServerFactory factory = new JettyServletWebServerFactory();
-        factory.setPort(9000);
-        factory.setContextPath("/upload");
+        factory.setPort(9090);
+        factory.setContextPath("/api");
         factory.addErrorPages(new ErrorPage(HttpStatus.NOT_FOUND, "/notfound.html"));
         return factory;
     }
