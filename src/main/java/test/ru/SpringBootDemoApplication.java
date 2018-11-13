@@ -11,26 +11,12 @@ import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 import java.io.*;
+import java.util.concurrent.ExecutionException;
 
 @SpringBootApplication
 public class SpringBootDemoApplication {
 
     public static void main(String[] args) {
-    /*    byte[] b = new byte[1024];
-        for(byte b1 : b){
-            b1 = 34;
-        }
-        b[0]=32;
-        b[1023]=33;
-        try {
-            File f = new File("");
-            OutputStream is = new BufferedOutputStream(new FileOutputStream(f.getAbsolutePath()+File.pathSeparator+"test.zip"));
-            is.write(b);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
         SpringApplication.run(SpringBootDemoApplication.class, args);
     }
 
@@ -44,12 +30,17 @@ public class SpringBootDemoApplication {
         return factory;
     }
 
-    //mvc  - https://www.baeldung.com/spring-file-upload
-    @Bean(name = "multipartResolver")
-    public CommonsMultipartResolver multipartResolver() {
-        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
-        multipartResolver.setMaxUploadSize(100000);
-        return multipartResolver;
+    @Bean
+    public ThreadPull threadPull()
+    {
+        try {
+            ThreadPull.getInstance().start();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return ThreadPull.getInstance();
     }
 
 }

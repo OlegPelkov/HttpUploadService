@@ -1,9 +1,10 @@
 package test.ru.api.v1.upload;
 
 import org.springframework.web.bind.annotation.*;
+import test.ru.TaskContainer;
+import test.ru.WriteFileTask;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.*;
 
 @RestController
 public class UploadController
@@ -13,20 +14,17 @@ public class UploadController
             @RequestHeader(name = "X-Upload-File", required = true) String fileName,
             @RequestHeader(name = "Content-Length", required = true) Integer size,
             HttpServletRequest request){
-        try {
-            InputStream inputStream = request.getInputStream();
-            byte[] buffer = new byte[size];
-            int bytesRead;
             System.out.println("POST - "+"/v1/upload "+fileName + " "+size);
-            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(new File("").getAbsolutePath()+File.separator+fileName));
-            while ((bytesRead = inputStream.read(buffer)) > 0) {
-                bos.write(buffer, 0, bytesRead);
-                System.out.println("POST - " + "write to " + fileName + " " + bytesRead);
+            try {
+                if (size > 0 && size < 50000000) {
+                    WriteFileTask writeFileTask = new WriteFileTask(request.getInputStream(), size, fileName);
+                    TaskContainer.getInstance().add(writeFileTask);
+                }
+            } catch (Exception e){
+                System.err.println("--- "+e);
             }
-            bos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+
         String result = fileName + "  " + size + "  " + "  "+"success";
         System.out.println("--- "+result);
         return result;
