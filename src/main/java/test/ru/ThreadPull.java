@@ -22,7 +22,7 @@ public class ThreadPull {
     public void start() throws ExecutionException, InterruptedException {
         threadPool = Executors.newFixedThreadPool(threadsCount);
         for(int i=0;i< threadsCount;i++) {
-            threadPool.submit(new TaskHandler());
+            threadPool.submit(new TaskHandlerThread(i));
         }
     }
 
