@@ -1,5 +1,7 @@
 package test.ru;
 
+import test.ru.channel.DataChannel;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -9,7 +11,7 @@ import java.util.function.BiConsumer;
 
 public class DataMapBuffer {
 
-    private Map<String, LinkedBlockingDeque<byte[]>> dataMap = new ConcurrentHashMap<>();
+    private Map<String, DataChannel> dataMap = new ConcurrentHashMap<>();
 
     public static class SingletonHolder {
         public static final DataMapBuffer INSTANCE = new DataMapBuffer();
@@ -19,24 +21,20 @@ public class DataMapBuffer {
         return DataMapBuffer.SingletonHolder.INSTANCE;
     }
 
-
-    public LinkedBlockingDeque<byte[]> get(Object key) {
+    public DataChannel get(Object key) {
         return dataMap.get(key);
     }
 
-    public LinkedBlockingDeque<byte[]> put(String key, LinkedBlockingDeque value) {
+    public DataChannel put(String key, DataChannel value) {
         return dataMap.put(key, value);
     }
 
-    public LinkedBlockingDeque<byte[]> remove(Object key) {
+    public DataChannel remove(Object key) {
         return dataMap.remove(key);
     }
 
-    public Set<Map.Entry<String, LinkedBlockingDeque<byte[]>>> entrySet() {
+    public Set<Map.Entry<String, DataChannel>> entrySet() {
         return dataMap.entrySet();
     }
 
-    public void forEach(BiConsumer<? super String, ? super LinkedBlockingDeque<byte[]>> action) {
-        dataMap.forEach(action);
-    }
 }
