@@ -2,7 +2,8 @@ package test.ru;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import test.ru.channel.DataChannel;
+import test.ru.channel.FileDataChannel;
+import test.ru.channel.RequestDataChannel;
 
 import java.io.*;
 import java.util.Map;
@@ -20,45 +21,45 @@ public class TaskHandlerThread implements Runnable {
     @Override
     public void run() {
         LOG.info("{}-{} started", TaskHandlerThread.class.getSimpleName(), number);
-        DataMapBuffer dataMapBuffer = DataMapBuffer.getInstance();
+        RequestChannelMap requestChannelMap = RequestChannelMap.getInstance();
+        FileChannelMap fileChannelMap = FileChannelMap.getInstance();
+
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                for(Map.Entry<String, DataChannel> entry : DataMapBuffer.getInstance().entrySet()) {
-                    DataChannel dataChannel = entry.getValue();
-                    byte[] buffer = null;
-                    RandomAccessFile file = null;
-                    if (dataChannel.tryLock()) {
-                        LOG.info("++++++++++++++++++ ThreadNum : "+number+" lock");
-                        boolean openFile = false;
-                        while ((buffer = dataChannel.pollFirst()) != null) {
-                            dataChannel.incBlocks();
-                            LOG.info("ThreadNum : "+number+" Write " + dataChannel.getFile().getFileName() + " " + buffer.length + " ");
-                            if(!openFile) {
-                                LOG.info("ThreadNum : "+number+" Write openFile" + dataChannel.getFile().getFileName() + " ");
-                                file = new RandomAccessFile(new File("").getAbsolutePath() + File.separator + dataChannel.getFile().getFileName(), "rw");
-                                file.skipBytes((int) file.length());
-                                openFile = true;
-                            }
-                            file.write(buffer, 0, buffer.length);
-                            dataChannel.addWritedBytes(buffer.length);
-                            LOG.info("ThreadNum : "+number+" Writed " + dataChannel.getFile().getFileName() + " " + dataChannel.getWritedBytes() + "  block: "+dataChannel.getWritedBlocks());
-                            if (file.length() == dataChannel.getFile().getSize()) {
-                                DataMapBuffer.getInstance().remove(dataChannel.getFile().getFileName());
-                            }
-                        }
-                        if(file!=null) {
-                            file.close();
-                        }
-                        LOG.info("-------------- ThreadNum : "+number+" unlock");
-                        dataChannel.unlock();
+                for (Map.Entry<String, RequestDataChannel> entry : requestChannelMap.entrySet()) {
+                    FileDataChannel currentFileChannel = fileChannelMap.get(entry.getKey());
+                    if (currentFileChannel == null) {
+                        currentFileChannel = new FileDataChannel(entry.getValue().getFile());
+                        fileChannelMap.put(currentFileChannel.getFile().getFileName(), currentFileChannel);
                     }
-                     Thread.sleep(20);
+                    if (currentFileChannel.tryLock()) {
+                        RequestDataChannel requestDataChannel = entry.getValue();
+                        if (requestDataChannel.tryLock()) {
+                            byte[] buffer = null;
+                            LOG.info("++++++++++++++++++ ThreadNum : {} lock ",number);
+                            currentFileChannel.setOpenFile(false);
+                            while ((buffer = requestDataChannel.pollFirst()) != null) {
+                                requestDataChannel.incrementBlockCount();
+                                currentFileChannel.writeData(buffer, number);
+                                requestDataChannel.addWritedBytes(buffer.length);
+                                if (currentFileChannel.getWritedBytes() == requestDataChannel.getFile().getSize()) {
+                                    requestChannelMap.remove(requestDataChannel.getFile().getFileName());
+                                    fileChannelMap.remove(currentFileChannel.getFile().getFileName());
+                                    LOG.info("Success File Writed {} size {} ThreadNum {}",currentFileChannel.getFile().getFileName(), currentFileChannel.getWritedBytes(),number);
+                                }
+                            }
+                            currentFileChannel.closeDestFile();
+                            LOG.info("-------------- ThreadNum : {} unlock ",number);
+                            requestDataChannel.unlock();
+                        }
+                        currentFileChannel.unlock();
+                    }
+                    Thread.sleep(20);
                 }
             } catch (Exception e) {
                 LOG.error("Error {}", e);
             }
         }
-
         LOG.info("{}-{} stopped", TaskHandlerThread.class.getSimpleName(), number);
     }
 }

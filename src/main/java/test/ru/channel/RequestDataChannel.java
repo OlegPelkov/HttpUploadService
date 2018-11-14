@@ -5,7 +5,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class DataChannel {
+/**
+ * Data channel between request and thread;
+ * **/
+public class RequestDataChannel {
 
     private final LinkedBlockingDeque<byte[]> blockingQueue = new LinkedBlockingDeque();
     private final Lock lock = new ReentrantLock();
@@ -25,11 +28,11 @@ public class DataChannel {
         return writedBlocks.get();
     }
 
-    public void incBlocks() {
+    public void incrementBlockCount() {
         this.writedBlocks.incrementAndGet();
     }
 
-    public DataChannel(DataFile file) {
+    public RequestDataChannel(DataFile file) {
         this.file = file;
     }
 

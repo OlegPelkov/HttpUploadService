@@ -12,8 +12,9 @@ public class ThreadPull {
         return ThreadPull.SingletonHolder.INSTANCE;
     }
 
-    private ExecutorService threadPool = null;
     private int threadsCount = 8;
+
+    private ExecutorService threadPool = null;
 
     public void setThreadsCount(int threadsCount) {
         this.threadsCount = threadsCount;

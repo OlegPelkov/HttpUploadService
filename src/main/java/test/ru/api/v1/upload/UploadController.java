@@ -3,15 +3,14 @@ package test.ru.api.v1.upload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
-import test.ru.DataMapBuffer;
-import test.ru.channel.DataChannel;
+import test.ru.RequestChannelMap;
+import test.ru.channel.RequestDataChannel;
 import test.ru.channel.DataFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.LinkedBlockingDeque;
 
 @RestController
 public class UploadController {
@@ -48,8 +47,8 @@ public class UploadController {
         try {
             if (size > 0 && size < MAX_FILE_SIZE) {
 
-                DataChannel dataChannel = new DataChannel(new DataFile(fileName, size));
-                DataMapBuffer.getInstance().put(dataChannel.getFile().getFileName(), dataChannel);
+                RequestDataChannel requestDataChannel = new RequestDataChannel(new DataFile(fileName, size));
+                RequestChannelMap.getInstance().put(requestDataChannel.getFile().getFileName(), requestDataChannel);
                 is = request.getInputStream();
 
                 int bytesRead;
@@ -58,11 +57,10 @@ public class UploadController {
                 while ((bytesRead = is.read(buffer)) > 0) {
                     byte[] transferBuffer = new byte[bytesRead];
                     System.arraycopy(buffer,0,transferBuffer,0,bytesRead);
-                    dataChannel.addLast(transferBuffer);
+                    requestDataChannel.addLast(transferBuffer);
                     countOfOperations++;
                     bytesCountReaded+=bytesRead;
-                    LOG.info("Write to dataChannel " + fileName + " " + bytesRead);
-                   // Thread.sleep(20);
+                    LOG.info("Write to requestDataChannel {} bytes {} block {}",fileName,bytesRead, countOfOperations);
                 }
                 if(bytesCountReaded != size){
                     throw new Exception("Error byte count transfer");
@@ -71,7 +69,7 @@ public class UploadController {
         } catch (Exception e){
             LOG.error("Error {}",e);
         }
-        String result = fileName + "  " + bytesCountReaded + "  " + "  "+"success"+ " blocks: "+countOfOperations;
+        String result = fileName + "  " + bytesCountReaded + "  " + "  "+"file is loading"+ " blocks: "+countOfOperations;
         LOG.info(result);
         return result;
     }
