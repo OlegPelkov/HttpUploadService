@@ -79,7 +79,7 @@ public class FileDataChannel {
         fileDest.write(buffer, 0, buffer.length);
         writedBytes.addAndGet(buffer.length);
         writedBlocks.incrementAndGet();
-        LOG.debug("ThreadNum : {} write {} bytes in {} block to {} ", number, buffer.length, writedBlocks, sourceDatafile.getFileName());
+        LOG.debug("ThreadNum : {} write {} bytes in {} block to {}  all bytes - {}", number, buffer.length, writedBlocks, sourceDatafile.getFileName(), writedBytes.get());
     }
 }
 

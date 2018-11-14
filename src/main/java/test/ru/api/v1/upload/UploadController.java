@@ -69,7 +69,7 @@ public class UploadController {
         } catch (Exception e){
             LOG.error("Error {}",e);
         }
-        String result = fileName + "  " + bytesCountReaded + "  " + "  "+"file is loading"+ " blocks: "+countOfOperations;
+        String result = fileName + "  " + bytesCountReaded + "  "+"file is loading"+ " blocks: "+countOfOperations;
         LOG.info(result);
         return result;
     }

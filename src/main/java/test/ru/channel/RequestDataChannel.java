@@ -1,5 +1,7 @@
 package test.ru.channel;
 
+import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -10,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * **/
 public class RequestDataChannel {
 
-    private final LinkedBlockingDeque<byte[]> blockingQueue = new LinkedBlockingDeque();
+    private final Deque<byte[]> blockingQueue = new ConcurrentLinkedDeque();
     private final Lock lock = new ReentrantLock();
     private final DataFile file;
     private AtomicInteger writedBytes = new AtomicInteger();
