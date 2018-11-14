@@ -4,9 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import test.ru.channel.FileDataChannel;
 import test.ru.channel.RequestDataChannel;
+import test.ru.channelMaps.FileChannelMap;
+import test.ru.channelMaps.RequestChannelMap;
 
-import java.io.*;
 import java.util.Map;
+
+import static test.ru.utils.Utils.deleteOldFile;
+import static test.ru.utils.Utils.isExist;
 
 public class TaskHandlerThread implements Runnable {
 
@@ -29,8 +33,13 @@ public class TaskHandlerThread implements Runnable {
                 for (Map.Entry<String, RequestDataChannel> entry : requestChannelMap.entrySet()) {
                     FileDataChannel currentFileChannel = fileChannelMap.get(entry.getKey());
                     if (currentFileChannel == null) {
-                        currentFileChannel = new FileDataChannel(entry.getValue().getFile());
-                        fileChannelMap.put(currentFileChannel.getFile().getFileName(), currentFileChannel);
+                        currentFileChannel = new FileDataChannel(entry.getValue().getFileAttribute());
+                        String fileName = currentFileChannel.getFileAttribute().getFileName();
+                        fileChannelMap.put(fileName, currentFileChannel);
+                        if(isExist(fileName) && !deleteOldFile(fileName)){
+                            LOG.error("ThreadNum : {} can not delete old file {}",number,fileName);
+                            continue;
+                        }
                     }
                     if (currentFileChannel.tryLock()) {
                         RequestDataChannel requestDataChannel = entry.getValue();
@@ -42,10 +51,11 @@ public class TaskHandlerThread implements Runnable {
                                 requestDataChannel.incrementBlockCount();
                                 currentFileChannel.writeData(buffer, number);
                                 requestDataChannel.addWritedBytes(buffer.length);
-                                if (currentFileChannel.getWritedBytes() == requestDataChannel.getFile().getSize()) {
-                                    requestChannelMap.remove(requestDataChannel.getFile().getFileName());
-                                    fileChannelMap.remove(currentFileChannel.getFile().getFileName());
-                                    LOG.info("Success File Writed {} size {} ThreadNum {}",currentFileChannel.getFile().getFileName(), currentFileChannel.getWritedBytes(),number);
+                                Thread.sleep(10);
+                                if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
+                                    requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
+                                    fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
+                                    LOG.info("Success File Writed {} size {} ThreadNum {}",currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(),number);
                                 }
                             }
                             currentFileChannel.closeDestFile();

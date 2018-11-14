@@ -1,4 +1,4 @@
-package test.ru;
+package test.ru.channelMaps;
 
 import test.ru.channel.RequestDataChannel;
 
@@ -23,7 +23,11 @@ public class RequestChannelMap {
     }
 
     public RequestDataChannel put(String key, RequestDataChannel value) {
-        return requestChannelMap.put(key, value);
+        return requestChannelMap.putIfAbsent(key, value);
+    }
+
+    public boolean containsKey(Object key) {
+        return requestChannelMap.containsKey(key);
     }
 
     public RequestDataChannel remove(Object key) {

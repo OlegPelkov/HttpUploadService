@@ -2,36 +2,38 @@ package test.ru.channel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import test.ru.fileAttributs.FileAttribute;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Data channel between thread and file;
  **/
 
-public class FileDataChannel {
+public class FileDataChannel extends DataChannel {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileDataChannel.class);
 
     private AtomicBoolean openFile = new AtomicBoolean(false);
     private RandomAccessFile fileDest = null;
-    private final DataFile sourceDatafile;
-    private final Lock lock = new ReentrantLock();
-    private AtomicInteger writedBytes = new AtomicInteger();
-    private AtomicInteger writedBlocks = new AtomicInteger();
+    private long timeStartUpload;
 
-    public int getWritedBytes() {
-        return writedBytes.get();
+    public FileDataChannel(FileAttribute file) {
+        super(file);
+        timeStartUpload = System.currentTimeMillis();
     }
 
-    public FileDataChannel(DataFile file) {
-        this.sourceDatafile = file;
+    public int getCountWrittenBytes() {
+        return countWrittenBytes.get();
+    }
+
+    @Override
+    public long getDuration() {
+        return timeDuration.get();
     }
 
     public boolean isOpenFile() {
@@ -42,10 +44,6 @@ public class FileDataChannel {
         openFile.set(newValue);
     }
 
-    public void lock() {
-        lock.lock();
-    }
-
     public boolean tryLock() {
         return lock.tryLock();
     }
@@ -54,8 +52,8 @@ public class FileDataChannel {
         lock.unlock();
     }
 
-    public DataFile getFile() {
-        return sourceDatafile;
+    public FileAttribute getFileAttribute() {
+        return file;
     }
 
     public void closeDestFile() throws IOException {
@@ -66,8 +64,8 @@ public class FileDataChannel {
     }
 
     private synchronized void openFile(int number) throws IOException {
-        LOG.debug("ThreadNum : {} open file {}", number, sourceDatafile.getFileName());
-        fileDest = new RandomAccessFile(new File("").getAbsolutePath() + File.separator + sourceDatafile.getFileName(), "rw");
+        LOG.debug("ThreadNum :{} open file {}", number, file.getFileName());
+        fileDest = new RandomAccessFile(new File("").getAbsolutePath() + File.separator + file.getFileName(), "rw");
         fileDest.skipBytes((int) fileDest.length());
         openFile.set(true);
     }
@@ -77,10 +75,12 @@ public class FileDataChannel {
             openFile(number);
         }
         fileDest.write(buffer, 0, buffer.length);
-        writedBytes.addAndGet(buffer.length);
-        writedBlocks.incrementAndGet();
-        LOG.debug("ThreadNum : {} write {} bytes in {} block to {}  all bytes - {}", number, buffer.length, writedBlocks, sourceDatafile.getFileName(), writedBytes.get());
+        countWrittenBytes.addAndGet(buffer.length);
+        countWrittenBlocks.incrementAndGet();
+        timeDuration.set(System.currentTimeMillis()-timeStartUpload);
+        LOG.debug("ThreadNum :{} write {} bytes in {} block to {} all bytes writed - {}", number, buffer.length, countWrittenBlocks, file.getFileName(), countWrittenBytes.get());
     }
+
 }
 
 

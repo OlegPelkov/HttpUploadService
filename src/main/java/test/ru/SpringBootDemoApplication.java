@@ -28,16 +28,16 @@ public class SpringBootDemoApplication {
     }
 
     @Bean
-    public ThreadPull threadPull()
+    public ThreadPool threadPull()
     {
         try {
-            ThreadPull.getInstance().start();
+            ThreadPool.getInstance().start();
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return ThreadPull.getInstance();
+        return ThreadPool.getInstance();
     }
 
 }

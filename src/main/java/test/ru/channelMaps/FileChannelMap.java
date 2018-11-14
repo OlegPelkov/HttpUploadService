@@ -1,4 +1,4 @@
-package test.ru;
+package test.ru.channelMaps;
 
 import test.ru.channel.FileDataChannel;
 

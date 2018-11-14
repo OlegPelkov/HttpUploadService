@@ -2,17 +2,17 @@ package test.ru;
 
 import java.util.concurrent.*;
 
-public class ThreadPull {
+public class ThreadPool {
 
     public static class SingletonHolder {
-        public static final ThreadPull INSTANCE = new ThreadPull();
+        public static final ThreadPool INSTANCE = new ThreadPool();
     }
 
-    public static ThreadPull getInstance() {
-        return ThreadPull.SingletonHolder.INSTANCE;
+    public static ThreadPool getInstance() {
+        return ThreadPool.SingletonHolder.INSTANCE;
     }
 
-    private int threadsCount = 8;
+    private int threadsCount = 2;
 
     private ExecutorService threadPool = null;
 
