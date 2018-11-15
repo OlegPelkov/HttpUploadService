@@ -67,10 +67,12 @@ public class UploadController {
                 if (bytesCountReaded != size) {
                     throw new Exception("Error byte count transfer");
                 }
+            } else {
+                return LogPostResponse("/v1/upload:", "Error load " + fileName + " size of file more then 50mb ");
             }
         } catch (Exception e) {
             LOG.error("Error {}", e);
-            return LogPostResponse("/v1/upload:", "Error " + fileName + " " + e);
+            return LogPostResponse("/v1/upload:", "Error load " + fileName + " " + e);
         }
         String result = fileName + "  " + bytesCountReaded + "  " + "file is loading" + " blocks: " + countOfOperations;
         return LogPostResponse("/v1/upload:", result);

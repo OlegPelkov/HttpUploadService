@@ -1,14 +1,18 @@
 
+import org.eclipse.jetty.client.HttpResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import test.ru.api.v1.upload.UploadController;
+
+import java.io.IOException;
 
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -18,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UploadTest {
-
+/*
     final String BASE_URL = "http://localhost:9090/";
 
     @Autowired
@@ -42,4 +46,21 @@ public class UploadTest {
                 .andExpect(content().string("Hello World"));
 
     }
+
+    @Test
+    public void givenUserDoesNotExists_whenUserInfoIsRetrieved_then404IsReceived()
+            throws ClientProtocolException, IOException {
+
+        // Given
+        String name = RandomStringUtils.randomAlphabetic( 8 );
+        HttpUriRequest request = new HttpGet( "https://api.github.com/users/" + name );
+
+        // When
+        HttpResponse httpResponse = HttpClientBuilder.create().build().execute( request );
+
+        // Then
+        assertThat(
+                httpResponse.getStatusLine().getStatusCode(),
+                equalTo(HttpStatus.SC_NOT_FOUND));
+    }*/
 }
