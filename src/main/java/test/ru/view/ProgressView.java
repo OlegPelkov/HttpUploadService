@@ -13,4 +13,8 @@ public class ProgressView {
     public ProgressView(Set<FileUploadView> fileDataChannels) {
         this.fileDataChannels = fileDataChannels;
     }
+
+    public int size() {
+        return fileDataChannels.size();
+    }
 }

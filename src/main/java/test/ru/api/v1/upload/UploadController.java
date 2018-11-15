@@ -47,7 +47,7 @@ public class UploadController {
         InputStream is;
 
         try {
-            if (size > 0 && size < MAX_FILE_SIZE) {
+            if (size > 0 && size <= MAX_FILE_SIZE) {
                 RequestDataChannel requestDataChannel = new RequestDataChannel(new FileAttribute(fileName, getFileNameWithTimeStamp(), size));
                 if (requestChannelMap.containsKey(requestDataChannel.getFileAttribute().getFileName())) {
                     return LogPostResponse("/v1/upload:", "File " + fileName + " already loading");
@@ -61,9 +61,9 @@ public class UploadController {
                     requestDataChannel.addLast(transferBuffer);
                     countOfOperations++;
                     bytesCountReaded += bytesRead;
-                    LOG.info("Write to requestDataChannel {} bytes {} block {}", fileName, bytesRead, countOfOperations);
+                    LOG.debug("Write to requestDataChannel {} bytes {} block {}", fileName, bytesRead, countOfOperations);
+                    Thread.sleep(10);
                 }
-
                 if (bytesCountReaded != size) {
                     throw new Exception("Error byte count transfer");
                 }

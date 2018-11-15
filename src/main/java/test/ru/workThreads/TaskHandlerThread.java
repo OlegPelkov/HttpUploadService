@@ -49,7 +49,6 @@ public class TaskHandlerThread implements Runnable {
                         try {
                             RequestDataChannel requestDataChannel = entry.getValue();
                             if (requestDataChannel.tryLock()) {
-                                LOG.info("++++++++++++++++++ ThreadNum : {} lock ", number);
                                 try {
                                     byte[] buffer = null;
                                     currentFileChannel.setOpenFile(false);
@@ -66,7 +65,6 @@ public class TaskHandlerThread implements Runnable {
                                     }
                                     currentFileChannel.closeDestFile();
                                 } finally {
-                                    LOG.info("-------------- ThreadNum : {} unlock ", number);
                                     requestDataChannel.unlock();
                                 }
                             }
