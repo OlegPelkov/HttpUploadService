@@ -22,8 +22,8 @@ public class FileChannelMap {
         return fileChannelMap.get(key);
     }
 
-    public FileDataChannel put(String key, FileDataChannel value) {
-        return fileChannelMap.put(key, value);
+    public FileDataChannel putIfAbsent(String key, FileDataChannel value) {
+        return fileChannelMap.putIfAbsent(key, value);
     }
 
     public FileDataChannel remove(Object key) {

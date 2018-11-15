@@ -43,18 +43,18 @@ public class UploadController {
 
         int bytesCountReaded = 0;
         int countOfOperations = 0;
+        int bytesRead = 0;
         InputStream is;
+
         try {
             if (size > 0 && size < MAX_FILE_SIZE) {
                 RequestDataChannel requestDataChannel = new RequestDataChannel(new FileAttribute(fileName, getFileNameWithTimeStamp(), size));
                 if (requestChannelMap.containsKey(requestDataChannel.getFileAttribute().getFileName())) {
-                    return "File " + fileName + " already loading";
+                    return LogPostResponse("/v1/upload:", "File " + fileName + " already loading");
                 }
-                requestChannelMap.put(requestDataChannel.getFileAttribute().getFileName(), requestDataChannel);
+                requestChannelMap.putIfAbsent(requestDataChannel.getFileAttribute().getFileName(), requestDataChannel);
                 is = request.getInputStream();
-                int bytesRead;
                 byte[] buffer = new byte[size];
-
                 while ((bytesRead = is.read(buffer)) > 0) {
                     byte[] transferBuffer = new byte[bytesRead];
                     System.arraycopy(buffer, 0, transferBuffer, 0, bytesRead);
@@ -70,31 +70,23 @@ public class UploadController {
             }
         } catch (Exception e) {
             LOG.error("Error {}", e);
+            return LogPostResponse("/v1/upload:", "Error " + fileName + " " + e);
         }
         String result = fileName + "  " + bytesCountReaded + "  " + "file is loading" + " blocks: " + countOfOperations;
-        LOG.info("POST RESPONSE: {}", result);
-        return result;
+        return LogPostResponse("/v1/upload:", result);
     }
 
     @RequestMapping(value = "/v1/upload/progress", method = RequestMethod.GET)
     public String uploadGet() {
         LOG.info("GET REQUEST /v1/upload/progress");
-        Set<FileUploadView> fileUploadViews = new LinkedHashSet<>();
         Set<FileUploadView> requestUploadViews = new LinkedHashSet<>();
-        for (Map.Entry<String, FileDataChannel> entry : fileChannelMap.entrySet()) {
-            FileAttribute fileAttr = entry.getValue().getFileAttribute();
-            fileUploadViews.add(new FileUploadView(fileAttr.getId(), fileAttr.getSize(), entry.getValue().getCountWrittenBytes()));
-        }
         for (Map.Entry<String, RequestDataChannel> entry : requestChannelMap.entrySet()) {
             FileAttribute fileAttr = entry.getValue().getFileAttribute();
             requestUploadViews.add(new FileUploadView(fileAttr.getId(), fileAttr.getSize(), entry.getValue().getCountWrittenBytes()));
         }
-        Set<FileUploadView> resultSet = new LinkedHashSet<>();
-        resultSet.addAll(fileUploadViews);
-        resultSet.addAll(requestUploadViews);
-        String result = gson.toJson(new ProgressView(resultSet));
+        String result = gson.toJson(new ProgressView(requestUploadViews));
         LOG.info("GET RESPONSE /v1/upload/progress: {}", result);
-        return result;
+        return LogGetResponse("/v1/upload/progress: ", result);
     }
 
     @RequestMapping(value = "/v1/upload/duration", method = RequestMethod.GET)
@@ -106,7 +98,16 @@ public class UploadController {
             durationStrings.add(getFileUploadDurationString(fileAttr.getId(), entry.getValue().getDuration()));
         }
         String result = new DurationView(durationStrings).getView();
-        LOG.info("GET RESPONSE /v1/upload/duration: {}", result);
-        return result;
+        return LogGetResponse("/v1/upload/duration: ", result);
+    }
+
+    private String LogPostResponse(String info, String value) {
+        LOG.info("POST RESPONSE {} {}", info, value);
+        return value;
+    }
+
+    private String LogGetResponse(String info, String value) {
+        LOG.info("GET RESPONSE {} {}", info, value);
+        return value;
     }
 }

@@ -20,7 +20,7 @@ public class FileDataChannel extends DataChannel {
 
     private AtomicBoolean openFile = new AtomicBoolean(false);
     private RandomAccessFile fileDest = null;
-    private long timeStartUpload;
+    private final long timeStartUpload;
 
     public FileDataChannel(FileAttribute file) {
         super(file);

@@ -22,7 +22,7 @@ public class RequestChannelMap {
         return requestChannelMap.get(key);
     }
 
-    public RequestDataChannel put(String key, RequestDataChannel value) {
+    public RequestDataChannel putIfAbsent(String key, RequestDataChannel value) {
         return requestChannelMap.putIfAbsent(key, value);
     }
 

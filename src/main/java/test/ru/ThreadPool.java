@@ -12,7 +12,7 @@ public class ThreadPool {
         return ThreadPool.SingletonHolder.INSTANCE;
     }
 
-    private int threadsCount = 2;
+    private int threadsCount = 8;
 
     private ExecutorService threadPool = null;
 
