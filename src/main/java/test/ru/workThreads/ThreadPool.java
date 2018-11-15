@@ -1,4 +1,4 @@
-package test.ru;
+package test.ru.workThreads;
 
 import java.util.concurrent.*;
 

@@ -1,11 +1,13 @@
 package test.ru.utils;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Utils {
+
+    public final static String DIR_NAME =  File.separator +"uploads";
+    public final static String DIR_PATH =  new File("").getAbsolutePath() + DIR_NAME;
 
     public static String getFileNameWithTimeStamp() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy M dd HH-mm-ss");
@@ -26,12 +28,12 @@ public class Utils {
     }
 
     public static boolean deleteOldFile(String fileName) {
-        File file = new File(new File("").getAbsolutePath() + File.separator + fileName);
+        File file = new File(new File("").getAbsolutePath() + DIR_NAME + File.separator + fileName);
         return file.delete();
     }
 
     public static boolean isExist(String fileName){
-        File file = new File(new File("").getAbsolutePath() + File.separator + fileName);
+        File file = new File(new File("").getAbsolutePath() + DIR_NAME + File.separator + fileName);
         return file.exists();
     }
 

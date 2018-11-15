@@ -1,4 +1,4 @@
-package test.ru;
+package test.ru.workThreads;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -3,6 +3,7 @@ package test.ru.channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import test.ru.fileAttributs.FileAttribute;
+import test.ru.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,7 +66,9 @@ public class FileDataChannel extends DataChannel {
 
     private synchronized void openFile(int number) throws IOException {
         LOG.debug("ThreadNum :{} open file {}", number, file.getFileName());
-        fileDest = new RandomAccessFile(new File("").getAbsolutePath() + File.separator + file.getFileName(), "rw");
+        File dir = new File(Utils.DIR_PATH);
+        dir.mkdir();
+        fileDest = new RandomAccessFile(new File("").getAbsolutePath() + Utils.DIR_NAME + File.separator + file.getFileName(), "rw");
         fileDest.skipBytes((int) fileDest.length());
         openFile.set(true);
     }
