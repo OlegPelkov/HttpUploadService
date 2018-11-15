@@ -11,10 +11,10 @@ import org.springframework.http.HttpStatus;
 import java.util.concurrent.ExecutionException;
 
 @SpringBootApplication
-public class SpringBootDemoApplication {
+public class Application {
 
     public static void main(String[] args) {
-        SpringApplication.run(SpringBootDemoApplication.class, args);
+        SpringApplication.run(Application.class, args);
     }
 
     @Bean
