@@ -2,15 +2,15 @@ package test.ru.channel;
 
 import test.ru.fileAttributs.FileAttribute;
 
-import java.util.Deque;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Data channel between request and thread;
  * **/
 public class RequestDataChannel extends DataChannel{
 
-    private final Deque<byte[]> blockingQueue = new ConcurrentLinkedDeque();
+    private final Queue<byte[]> queue = new ConcurrentLinkedQueue();
 
     public RequestDataChannel(FileAttribute file) {
         super(file);
@@ -49,15 +49,15 @@ public class RequestDataChannel extends DataChannel{
         lock.unlock();
     }
 
-    public void addLast(byte[] bytes) {
-        blockingQueue.addLast(bytes);
+    public void add(byte[] bytes) {
+        queue.add(bytes);
     }
 
-    public byte[] pollFirst() {
-        return blockingQueue.pollFirst();
+    public byte[] poll() {
+        return queue.poll();
     }
 
     public int size() {
-        return blockingQueue.size();
+        return queue.size();
     }
 }

@@ -1,6 +1,8 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
+import org.apache.http.message.BasicHeader;
 import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -59,7 +61,7 @@ public class UploadControllerTest {
     @Test
     public void testUploadFiles() throws JSONException, IOException, InterruptedException {
         //before
-        int requestCount = 10;
+        int requestCount = 100;
         byte[] data = TestFileCreator.getTestData();
         deleteFolder(new File(DIR_PATH));
         CountDownLatch latch = new CountDownLatch(requestCount);
@@ -71,7 +73,8 @@ public class UploadControllerTest {
             headers.add("X-Upload-File", fileName);
             fileMap.put(fileName,data.length);
             HttpEntity<byte[]> entity = new HttpEntity<>(data, headers);
-            requestThreadList.add(new RequestThread(latch, entity, port));
+            Header header = new BasicHeader("X-Upload-File", fileName);
+            requestThreadList.add(new RequestThread(latch, entity, port, header));
         }
         try {
             latch.await();
@@ -79,11 +82,15 @@ public class UploadControllerTest {
             LOG.error("Error {}", e);
             requestThreadList.clear();
         }
-
-        for (RequestThread requestThread : requestThreadList) {
-            if (!requestThread.getState().equals(Thread.State.TERMINATED)) {
-                Thread.sleep(10);
-                continue;
+        boolean threadsTerminate = false;
+        while(!threadsTerminate) {
+            for (RequestThread requestThread : requestThreadList) {
+                threadsTerminate = true;
+                if (!requestThread.getState().equals(Thread.State.TERMINATED)) {
+                    Thread.sleep(10);
+                    threadsTerminate = false;
+                    continue;
+                }
             }
         }
         ProgressView view = null;
@@ -91,6 +98,8 @@ public class UploadControllerTest {
             Thread.sleep(1000);
             view.size();
         }
+
+        LOG.info(" ------------- Files loaded ");
         //after
         Thread.sleep(2000);
         FileValidator fileValidator = new FileValidator();

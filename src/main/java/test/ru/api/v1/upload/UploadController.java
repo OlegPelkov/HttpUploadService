@@ -58,7 +58,7 @@ public class UploadController {
                 while ((bytesRead = is.read(buffer)) > 0) {
                     byte[] transferBuffer = new byte[bytesRead];
                     System.arraycopy(buffer, 0, transferBuffer, 0, bytesRead);
-                    requestDataChannel.addLast(transferBuffer);
+                    requestDataChannel.add(transferBuffer);
                     countOfOperations++;
                     bytesCountReaded += bytesRead;
                     LOG.debug("Write to requestDataChannel {} bytes {} block {}", fileName, bytesRead, countOfOperations);

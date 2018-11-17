@@ -52,7 +52,7 @@ public class TaskHandlerThread implements Runnable {
                                 try {
                                     byte[] buffer = null;
                                     currentFileChannel.setOpenFile(false);
-                                    while ((buffer = requestDataChannel.pollFirst()) != null) {
+                                    while ((buffer = requestDataChannel.poll()) != null) {
                                         requestDataChannel.incrementBlockCount();
                                         currentFileChannel.writeData(buffer, number);
                                         requestDataChannel.addWritedBytes(buffer.length);
