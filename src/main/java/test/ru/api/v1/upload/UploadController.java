@@ -4,8 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import test.ru.channelMaps.FileChannelMap;
+import test.ru.channelMaps.FreeSpaceCounter;
 import test.ru.channelMaps.RequestChannelMap;
 import test.ru.channel.FileDataChannel;
 import test.ru.channel.RequestDataChannel;
@@ -34,7 +36,7 @@ public class UploadController {
     private final RequestChannelMap requestChannelMap = RequestChannelMap.getInstance();
     private final FileChannelMap fileChannelMap = FileChannelMap.getInstance();
 
-    @RequestMapping(value = "/v1/upload", method = RequestMethod.POST)
+    @RequestMapping(value = "/v1/upload", method = RequestMethod.POST, consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public String uploadPost(@RequestHeader(name = "X-Upload-File", required = true) String fileName,
                              @RequestHeader(name = "Content-Length", required = true) Integer size, HttpServletRequest request) {
 
@@ -43,7 +45,7 @@ public class UploadController {
         int bytesCountReaded = 0;
         int countOfOperations = 0;
         int bytesRead = 0;
-        InputStream is;
+        BufferedInputStream  bis;
 
         try {
             if (size > 0 && size <= MAX_FILE_SIZE) {
@@ -57,9 +59,26 @@ public class UploadController {
                 if (isExist(fileName) && !deleteOldFile(fileName)) {
                     LOG.error("Can not delete old file {}",fileName);
                 }
-                is = request.getInputStream();
-                byte[] buffer = new byte[size];
-                while ((bytesRead = is.read(buffer)) > 0) {
+                bis = new BufferedInputStream(request.getInputStream());
+                int available;
+                while ((available = bis.available())>0){
+                    if(FreeSpaceCounter.getInstance().isHaveFreeSpace()) {
+                        byte[] buffer = new byte[available];
+                        bis.read(buffer, 0, available);
+                        requestDataChannel.add(buffer);
+                        countOfOperations++;
+                        bytesCountReaded += bytesRead;
+                        FreeSpaceCounter.getInstance().addAndGet(bytesCountReaded);
+                        LOG.debug("Write to requestDataChannel {} bytes {} block {}", fileName, bytesRead, countOfOperations);
+                        Thread.sleep(10);
+                    }
+                    Thread.sleep(200);
+                }
+                if (bytesCountReaded != size) {
+                    throw new Exception("Error byte count transfer");
+                }
+/*
+                while ((bytesRead = bis.read(buffer)) > 0) {
                     byte[] transferBuffer = new byte[bytesRead];
                     System.arraycopy(buffer, 0, transferBuffer, 0, bytesRead);
                     requestDataChannel.add(transferBuffer);
@@ -70,7 +89,7 @@ public class UploadController {
                 }
                 if (bytesCountReaded != size) {
                     throw new Exception("Error byte count transfer");
-                }
+                }*/
             } else {
                 return LogPostResponse("/v1/upload:", "Error load " + fileName + " size of file more then 50mb ");
             }

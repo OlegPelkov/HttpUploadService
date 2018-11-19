@@ -6,6 +6,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,9 @@ public class RequestThread extends Thread {
     @Override
     public void run() {
         latch.countDown();
-        HttpClient httpclient = HttpClients.createDefault();
+        HttpClientBuilder clientBuilder = HttpClients.custom();
+        clientBuilder.setRetryHandler(new DefaultHttpRequestRetryHandler(3, false));
+        HttpClient httpclient = clientBuilder.build();// HttpClients.createDefault();
         HttpPost httppost = new HttpPost("http://localhost:" + port + "/api/v1/upload");
         httppost.setEntity(new ByteArrayEntity(body));
         httppost.setHeader(header);

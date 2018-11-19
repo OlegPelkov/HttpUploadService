@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import test.ru.channel.FileDataChannel;
 import test.ru.channel.RequestDataChannel;
 import test.ru.channelMaps.FileChannelMap;
+import test.ru.channelMaps.FreeSpaceCounter;
 import test.ru.channelMaps.RequestChannelMap;
 import test.ru.utils.Utils;
 
@@ -77,6 +78,7 @@ public class TaskHandlerThread implements Runnable {
                             fileDest.write(dataBlock.getData());
                             currentFileChannel.updateTime();
                             currentFileChannel.addWritedBytes(dataBlock.getData().length);
+                            FreeSpaceCounter.getInstance().subtract(dataBlock.getData().length);
                             requestDataChannel.addWritedBytes(dataBlock.getData().length);
                             requestDataChannel.incrementBlockCount();
                             int block = currentFileChannel.incrementBlockCount();
