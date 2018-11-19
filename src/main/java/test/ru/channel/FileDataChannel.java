@@ -33,6 +33,14 @@ public class FileDataChannel extends DataChannel {
         return countWrittenBytes.get();
     }
 
+    public void addWritedBytes(int writedBytes) {
+        this.countWrittenBytes.addAndGet(writedBytes);
+    }
+
+    public int incrementBlockCount() {
+      return this.countWrittenBlocks.incrementAndGet();
+    }
+
     @Override
     public long getDuration() {
         return timeDuration.get();
@@ -65,25 +73,8 @@ public class FileDataChannel extends DataChannel {
         setOpenFile(false);
     }
 
-    private synchronized void openFile(int number) throws IOException {
-        if (!isOpenFile()) {
-            LOG.debug("ThreadNum :{} open file {}", number, file.getFileName());
-            File dir = new File(Utils.DIR_PATH);
-            dir.mkdir();
-            fileDest = new RandomAccessFile(new File("").getAbsolutePath() + Utils.DIR_NAME + File.separator + file.getFileName(), "rw");
-            fileDest.skipBytes((int) fileDest.length());
-            openFile.set(true);
-        }
-    }
-
-    public void writeData(DataBlock dataBlock, int number) throws IOException {
-        openFile(number);
-        fileDest.seek(dataBlock.getOffset());
-        fileDest.write(dataBlock.getData());
-        int bytes = countWrittenBytes.addAndGet(dataBlock.getData().length);
-        int block = countWrittenBlocks.incrementAndGet();
+    public void updateTime() throws IOException {
         timeDuration.set(System.currentTimeMillis()-timeStartUpload);
-        LOG.debug("ThreadNum :{} write {} bytes in {} block to {} all bytes writed - {}", number, dataBlock.getData().length, block, file.getFileName(), bytes);
     }
 
 }

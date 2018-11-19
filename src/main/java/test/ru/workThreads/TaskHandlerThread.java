@@ -6,7 +6,11 @@ import test.ru.channel.FileDataChannel;
 import test.ru.channel.RequestDataChannel;
 import test.ru.channelMaps.FileChannelMap;
 import test.ru.channelMaps.RequestChannelMap;
+import test.ru.utils.Utils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +46,18 @@ public class TaskHandlerThread implements Runnable {
         return null;
     }
 
+    private RandomAccessFile getFileWriter(String fileName) throws IOException {
+        if(!fileMap.containsKey(fileName)) {
+            File dir = new File(Utils.DIR_PATH);
+            dir.mkdir();
+            RandomAccessFile fileDest = new RandomAccessFile(new File("").getAbsolutePath() + Utils.DIR_NAME + File.separator + fileName, "rw");
+            fileDest.skipBytes(0);
+            fileMap.putIfAbsent(fileName, fileDest);
+            LOG.debug("ThreadNum :{} open file {}", number, fileName);
+        }
+        return fileMap.get(fileName);
+    }
+
     @Override
     public void run() {
         LOG.info("{}-{} started", TaskHandlerThread.class.getSimpleName(), number);
@@ -52,32 +68,29 @@ public class TaskHandlerThread implements Runnable {
             try {
                 for (Map.Entry<String, RequestDataChannel> entry : requestChannelMap.entrySet()) {
                     FileDataChannel currentFileChannel = fileChannelMap.get(entry.getKey());
-                    if (currentFileChannel == null) {
-                        currentFileChannel = new FileDataChannel(entry.getValue().getFileAttribute());
-                        String fileName = currentFileChannel.getFileAttribute().getFileName();
-                        if(requestChannelMap.containsKey(fileName)) {
-                            fileChannelMap.putIfAbsent(fileName, currentFileChannel);
-                            if (isExist(fileName) && !deleteOldFile(fileName)) {
-                                LOG.error("ThreadNum : {} can not delete old file {}", number, fileName);
-                                continue;
-                            }
+                    if (currentFileChannel != null) {
+                        RequestDataChannel requestDataChannel = entry.getValue();
+                        DataBlock dataBlock = null;
+                        while ((dataBlock = getDataBlock(requestDataChannel)) != null) {
+                            LOG.error("ThreadNum : {} point {}", number, dataBlock.getOffset());
+                            RandomAccessFile fileDest = getFileWriter(requestDataChannel.getFileAttribute().getFileName());
+                            fileDest.seek(dataBlock.getOffset());
+                            fileDest.write(dataBlock.getData());
+                            currentFileChannel.updateTime();
+                            currentFileChannel.addWritedBytes(dataBlock.getData().length);
+                            requestDataChannel.addWritedBytes(dataBlock.getData().length);
+                            int block = currentFileChannel.incrementBlockCount();
+                            requestDataChannel.incrementBlockCount();
+                            LOG.debug("ThreadNum :{} write {} bytes in {} block to {} ", number, dataBlock.getData().length, block, requestDataChannel.getFileAttribute().getFileName());
+                            Thread.sleep(50);
                         }
-                    }
-
-                    RequestDataChannel requestDataChannel = entry.getValue();
-                    DataBlock dataBlock = null;
-                    while ((dataBlock = getDataBlock(requestDataChannel)) != null) {
-                        LOG.error("ThreadNum : {} point {}", number, dataBlock.getOffset());
-                        currentFileChannel.writeData(dataBlock, number);
-                        requestDataChannel.incrementBlockCount();
-                        requestDataChannel.addWritedBytes(dataBlock.getData().length);
-                        Thread.sleep(50);
-                    }
-                    if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
-                        currentFileChannel.closeDestFile();
-                        requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
-                        fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
-                        LOG.info("Success File Writed {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
+                        if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
+                            RandomAccessFile fileDest = fileMap.get(requestDataChannel.getFileAttribute().getFileName());
+                            fileDest.close();
+                            requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
+                            fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
+                            LOG.info("Success File Writed {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
+                        }
                     }
                 }
                 Thread.sleep(10);

@@ -35,8 +35,8 @@ public class RequestDataChannel extends DataChannel{
         return countWrittenBlocks.get();
     }
 
-    public void incrementBlockCount() {
-        this.countWrittenBlocks.incrementAndGet();
+    public int incrementBlockCount() {
+       return this.countWrittenBlocks.incrementAndGet();
     }
 
     public FileAttribute getFileAttribute() {

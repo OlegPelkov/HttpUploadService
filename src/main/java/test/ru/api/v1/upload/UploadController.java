@@ -21,8 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static test.ru.utils.Utils.getFileNameWithTimeStamp;
-import static test.ru.utils.Utils.getFileUploadDurationString;
+import static test.ru.utils.Utils.*;
 
 @RestController
 public class UploadController {
@@ -53,6 +52,11 @@ public class UploadController {
                     return LogPostResponse("/v1/upload:", "File " + fileName + " already loading");
                 }
                 requestChannelMap.putIfAbsent(requestDataChannel.getFileAttribute().getFileName(), requestDataChannel);
+                FileDataChannel currentFileChannel = new FileDataChannel(requestDataChannel.getFileAttribute());
+                fileChannelMap.putIfAbsent(currentFileChannel.getFileAttribute().getFileName(), currentFileChannel);
+                if (isExist(fileName) && !deleteOldFile(fileName)) {
+                    LOG.error("Can not delete old file {}",fileName);
+                }
                 is = request.getInputStream();
                 byte[] buffer = new byte[size];
                 while ((bytesRead = is.read(buffer)) > 0) {
