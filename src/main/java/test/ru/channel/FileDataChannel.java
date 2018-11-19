@@ -66,35 +66,24 @@ public class FileDataChannel extends DataChannel {
     }
 
     private synchronized void openFile(int number) throws IOException {
-        LOG.debug("ThreadNum :{} open file {}", number, file.getFileName());
-        File dir = new File(Utils.DIR_PATH);
-        dir.mkdir();
-        fileDest = new RandomAccessFile(new File("").getAbsolutePath() + Utils.DIR_NAME + File.separator + file.getFileName(), "rw");
-        fileDest.skipBytes((int) fileDest.length());
-        openFile.set(true);
+        if (!isOpenFile()) {
+            LOG.debug("ThreadNum :{} open file {}", number, file.getFileName());
+            File dir = new File(Utils.DIR_PATH);
+            dir.mkdir();
+            fileDest = new RandomAccessFile(new File("").getAbsolutePath() + Utils.DIR_NAME + File.separator + file.getFileName(), "rw");
+            fileDest.skipBytes((int) fileDest.length());
+            openFile.set(true);
+        }
     }
 
-    public synchronized void writeData(byte[] buffer, int number, int offset) throws IOException {
-        if (!isOpenFile()) {
-            openFile(number);
-        }
-        fileDest.write(buffer, offset, buffer.length);
-        countWrittenBytes.addAndGet(buffer.length);
-        countWrittenBlocks.incrementAndGet();
-        timeDuration.set(System.currentTimeMillis()-timeStartUpload);
-        LOG.debug("ThreadNum :{} write {} bytes in {} block to {} all bytes writed - {}", number, buffer.length, countWrittenBlocks, file.getFileName(), countWrittenBytes.get());
-    }
-
-    public synchronized void writeData(DataBlock dataBlock, int number) throws IOException {
-        if (!isOpenFile()) {
-            openFile(number);
-        }
+    public void writeData(DataBlock dataBlock, int number) throws IOException {
+        openFile(number);
         fileDest.seek(dataBlock.getOffset());
-        fileDest.write(dataBlock.getData(), dataBlock.getOffset(), dataBlock.getData().length);
-        countWrittenBytes.addAndGet(dataBlock.getData().length);
-        countWrittenBlocks.incrementAndGet();
+        fileDest.write(dataBlock.getData());
+        int bytes = countWrittenBytes.addAndGet(dataBlock.getData().length);
+        int block = countWrittenBlocks.incrementAndGet();
         timeDuration.set(System.currentTimeMillis()-timeStartUpload);
-        LOG.debug("ThreadNum :{} write {} bytes in {} block to {} all bytes writed - {}", number, dataBlock.getData().length, countWrittenBlocks, file.getFileName(), countWrittenBytes.get());
+        LOG.debug("ThreadNum :{} write {} bytes in {} block to {} all bytes writed - {}", number, dataBlock.getData().length, block, file.getFileName(), bytes);
     }
 
 }

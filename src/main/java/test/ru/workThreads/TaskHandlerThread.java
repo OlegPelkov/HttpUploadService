@@ -7,6 +7,8 @@ import test.ru.channel.RequestDataChannel;
 import test.ru.channelMaps.FileChannelMap;
 import test.ru.channelMaps.RequestChannelMap;
 
+import java.io.RandomAccessFile;
+import java.util.HashMap;
 import java.util.Map;
 
 import static test.ru.utils.Utils.deleteOldFile;
@@ -16,19 +18,28 @@ public class TaskHandlerThread implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(TaskHandlerThread.class);
 
-    private int number;
+    private final int number;
+
+    private final Map<String, RandomAccessFile> fileMap = new HashMap();
 
     public TaskHandlerThread(int number) {
         this.number = number;
     }
 
     public DataBlock getDataBlock(RequestDataChannel requestDataChannel){
-        int bytePoint = requestDataChannel.getNextBytePoint();
-        byte[] buffer = null;
-        if((buffer = requestDataChannel.poll()) == null){
-            return null;
+        if(requestDataChannel.tryLock()) {
+            try {
+                int bytePoint = requestDataChannel.getNextBytePoint();
+                byte[] buffer = null;
+                if ((buffer = requestDataChannel.poll()) == null) {
+                    return null;
+                }
+                return new DataBlock(buffer, bytePoint);
+            } finally {
+                requestDataChannel.unlock();
+            }
         }
-        return new DataBlock(buffer, bytePoint);
+        return null;
     }
 
     @Override
@@ -56,17 +67,17 @@ public class TaskHandlerThread implements Runnable {
                     RequestDataChannel requestDataChannel = entry.getValue();
                     DataBlock dataBlock = null;
                     while ((dataBlock = getDataBlock(requestDataChannel)) != null) {
-                        LOG.error("ThreadNum : {} point {} buffer {}", number, dataBlock.getOffset(), dataBlock.getData());
+                        LOG.error("ThreadNum : {} point {}", number, dataBlock.getOffset());
                         currentFileChannel.writeData(dataBlock, number);
                         requestDataChannel.incrementBlockCount();
                         requestDataChannel.addWritedBytes(dataBlock.getData().length);
                         Thread.sleep(50);
-                        if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
-                            currentFileChannel.closeDestFile();
-                            requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
-                            fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
-                            LOG.info("Success File Writed {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
-                        }
+                    }
+                    if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
+                        currentFileChannel.closeDestFile();
+                        requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
+                        fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
+                        LOG.info("Success File Writed {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
                     }
                 }
                 Thread.sleep(10);
