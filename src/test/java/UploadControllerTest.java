@@ -61,7 +61,7 @@ public class UploadControllerTest {
     @Test
     public void testUploadFiles() throws JSONException, IOException, InterruptedException {
         //before
-        int requestCount = 100;
+        int requestCount = 1;
         byte[] data = TestFileCreator.getTestData();
         deleteFolder(new File(DIR_PATH));
         CountDownLatch latch = new CountDownLatch(requestCount);

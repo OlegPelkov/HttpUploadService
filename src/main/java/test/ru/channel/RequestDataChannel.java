@@ -4,6 +4,7 @@ import test.ru.fileAttributs.FileAttribute;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Data channel between request and thread;
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class RequestDataChannel extends DataChannel{
 
     private final Queue<byte[]> queue = new ConcurrentLinkedQueue();
+    private AtomicInteger nextBytePoint = new AtomicInteger();
 
     public RequestDataChannel(FileAttribute file) {
         super(file);
@@ -53,8 +55,17 @@ public class RequestDataChannel extends DataChannel{
         queue.add(bytes);
     }
 
-    public byte[] poll() {
-        return queue.poll();
+    public synchronized byte[] poll() {
+        byte[] bytes = queue.poll();
+        if(bytes == null){
+            return bytes;
+        }
+        nextBytePoint.addAndGet(bytes.length);
+        return bytes;
+    }
+
+    public int getNextBytePoint() {
+        return nextBytePoint.get();
     }
 
     public int size() {

@@ -10,7 +10,7 @@ public class TestFileCreator {
 
     public static byte[] getTestData(){
         byte[] data = new byte[MAX_FILE_SIZE];
-        byte b = 32;
+        byte b = 34;
         Arrays.fill(data, b);
         return data;
     }

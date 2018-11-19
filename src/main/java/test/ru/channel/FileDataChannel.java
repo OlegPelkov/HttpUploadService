@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import test.ru.fileAttributs.FileAttribute;
 import test.ru.utils.Utils;
+import test.ru.workThreads.DataBlock;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,15 +74,27 @@ public class FileDataChannel extends DataChannel {
         openFile.set(true);
     }
 
-    public synchronized void writeData(byte[] buffer, int number) throws IOException {
+    public synchronized void writeData(byte[] buffer, int number, int offset) throws IOException {
         if (!isOpenFile()) {
             openFile(number);
         }
-        fileDest.write(buffer, 0, buffer.length);
+        fileDest.write(buffer, offset, buffer.length);
         countWrittenBytes.addAndGet(buffer.length);
         countWrittenBlocks.incrementAndGet();
         timeDuration.set(System.currentTimeMillis()-timeStartUpload);
         LOG.debug("ThreadNum :{} write {} bytes in {} block to {} all bytes writed - {}", number, buffer.length, countWrittenBlocks, file.getFileName(), countWrittenBytes.get());
+    }
+
+    public synchronized void writeData(DataBlock dataBlock, int number) throws IOException {
+        if (!isOpenFile()) {
+            openFile(number);
+        }
+        fileDest.seek(dataBlock.getOffset());
+        fileDest.write(dataBlock.getData(), dataBlock.getOffset(), dataBlock.getData().length);
+        countWrittenBytes.addAndGet(dataBlock.getData().length);
+        countWrittenBlocks.incrementAndGet();
+        timeDuration.set(System.currentTimeMillis()-timeStartUpload);
+        LOG.debug("ThreadNum :{} write {} bytes in {} block to {} all bytes writed - {}", number, dataBlock.getData().length, countWrittenBlocks, file.getFileName(), countWrittenBytes.get());
     }
 
 }

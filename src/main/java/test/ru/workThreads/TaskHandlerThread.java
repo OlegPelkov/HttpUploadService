@@ -22,6 +22,15 @@ public class TaskHandlerThread implements Runnable {
         this.number = number;
     }
 
+    public DataBlock getDataBlock(RequestDataChannel requestDataChannel){
+        int bytePoint = requestDataChannel.getNextBytePoint();
+        byte[] buffer = null;
+        if((buffer = requestDataChannel.poll()) == null){
+            return null;
+        }
+        return new DataBlock(buffer, bytePoint);
+    }
+
     @Override
     public void run() {
         LOG.info("{}-{} started", TaskHandlerThread.class.getSimpleName(), number);
@@ -41,35 +50,22 @@ public class TaskHandlerThread implements Runnable {
                                 LOG.error("ThreadNum : {} can not delete old file {}", number, fileName);
                                 continue;
                             }
-                        } else {
-                         continue;
                         }
                     }
-                    if (currentFileChannel.tryLock()) {
-                        try {
-                            RequestDataChannel requestDataChannel = entry.getValue();
-                            if (requestDataChannel.tryLock()) {
-                                try {
-                                    byte[] buffer = null;
-                                    currentFileChannel.setOpenFile(false);
-                                    while ((buffer = requestDataChannel.poll()) != null) {
-                                        requestDataChannel.incrementBlockCount();
-                                        currentFileChannel.writeData(buffer, number);
-                                        requestDataChannel.addWritedBytes(buffer.length);
-                                        Thread.sleep(20);
-                                        if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
-                                            requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
-                                            fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
-                                            LOG.info("Success File Writed {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
-                                        }
-                                    }
-                                    currentFileChannel.closeDestFile();
-                                } finally {
-                                    requestDataChannel.unlock();
-                                }
-                            }
-                        } finally {
-                            currentFileChannel.unlock();
+
+                    RequestDataChannel requestDataChannel = entry.getValue();
+                    DataBlock dataBlock = null;
+                    while ((dataBlock = getDataBlock(requestDataChannel)) != null) {
+                        LOG.error("ThreadNum : {} point {} buffer {}", number, dataBlock.getOffset(), dataBlock.getData());
+                        currentFileChannel.writeData(dataBlock, number);
+                        requestDataChannel.incrementBlockCount();
+                        requestDataChannel.addWritedBytes(dataBlock.getData().length);
+                        Thread.sleep(50);
+                        if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
+                            currentFileChannel.closeDestFile();
+                            requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
+                            fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
+                            LOG.info("Success File Writed {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
                         }
                     }
                 }
