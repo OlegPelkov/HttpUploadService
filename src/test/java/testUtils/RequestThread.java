@@ -4,11 +4,15 @@ package testUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.protocol.HttpContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +41,9 @@ public class RequestThread extends Thread {
     @Override
     public void run() {
         latch.countDown();
-        HttpClientBuilder clientBuilder = HttpClients.custom();
-        clientBuilder.setRetryHandler(new DefaultHttpRequestRetryHandler(3, false));
-        HttpClient httpclient = clientBuilder.build();// HttpClients.createDefault();
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setValidateAfterInactivity(25000000);
+        HttpClient httpclient = HttpClientBuilder.create().setConnectionManager(connectionManager).setRetryHandler(new CustomHttpRequestRetryHandler()).build();
         HttpPost httppost = new HttpPost("http://localhost:" + port + "/api/v1/upload");
         httppost.setEntity(new ByteArrayEntity(body));
         httppost.setHeader(header);
@@ -63,4 +67,21 @@ public class RequestThread extends Thread {
     private String createURLWithPort(String uri) {
         return "http://localhost:" + port + uri;
     }
+
+    private class CustomHttpRequestRetryHandler implements HttpRequestRetryHandler {
+        @Override
+        public boolean retryRequest(IOException exception, int executionCount,
+                                    HttpContext context) {
+            if (executionCount > 10) {
+                LOG.warn("Maximum tries reached for client http pool ");
+                return false;
+            }
+            if (exception instanceof org.apache.http.NoHttpResponseException) {
+                LOG.warn("No response from server on " + executionCount + " call");
+                return true;
+            }
+            return false;
+        }
+    }
+
 }
