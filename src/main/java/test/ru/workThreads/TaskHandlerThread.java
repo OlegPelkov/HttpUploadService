@@ -32,44 +32,33 @@ public class TaskHandlerThread implements Runnable {
             try {
                 for (Map.Entry<String, RequestDataChannel> entry : requestChannelMap.entrySet()) {
                     FileDataChannel currentFileChannel = fileChannelMap.get(entry.getKey());
-                    if (currentFileChannel == null) {
-                        currentFileChannel = new FileDataChannel(entry.getValue().getFileAttribute());
-                        String fileName = currentFileChannel.getFileAttribute().getFileName();
-                        if(requestChannelMap.containsKey(fileName)) {
-                            fileChannelMap.putIfAbsent(fileName, currentFileChannel);
-                            if (isExist(fileName) && !deleteOldFile(fileName)) {
-                                LOG.error("ThreadNum : {} can not delete old file {}", number, fileName);
-                                continue;
-                            }
-                        } else {
-                         continue;
-                        }
-                    }
-                    if (currentFileChannel.tryLock()) {
-                        try {
-                            RequestDataChannel requestDataChannel = entry.getValue();
-                            if (requestDataChannel.tryLock()) {
-                                try {
-                                    byte[] buffer = null;
-                                    currentFileChannel.setOpenFile(false);
-                                    while ((buffer = requestDataChannel.poll()) != null) {
-                                        requestDataChannel.incrementBlockCount();
-                                        currentFileChannel.writeData(buffer, number);
-                                        requestDataChannel.addWritedBytes(buffer.length);
-                                        Thread.sleep(20);
-                                        if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
-                                            requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
-                                            fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
-                                            LOG.info("Success File Writed {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
+                    if (currentFileChannel != null) {
+                        if (currentFileChannel.tryLock()) {
+                            try {
+                                RequestDataChannel requestDataChannel = entry.getValue();
+                                if (requestDataChannel.tryLock()) {
+                                    try {
+                                        byte[] buffer = null;
+                                        currentFileChannel.setOpenFile(false);
+                                        while ((buffer = requestDataChannel.poll()) != null) {
+                                            requestDataChannel.incrementBlockCount();
+                                            currentFileChannel.writeData(buffer, number);
+                                            requestDataChannel.addWritedBytes(buffer.length);
+                                            Thread.sleep(50);
+                                            if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
+                                                requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
+                                                fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
+                                                LOG.info("Success File Writed {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
+                                            }
                                         }
+                                        currentFileChannel.closeDestFile();
+                                    } finally {
+                                        requestDataChannel.unlock();
                                     }
-                                    currentFileChannel.closeDestFile();
-                                } finally {
-                                    requestDataChannel.unlock();
                                 }
+                            } finally {
+                                currentFileChannel.unlock();
                             }
-                        } finally {
-                            currentFileChannel.unlock();
                         }
                     }
                 }

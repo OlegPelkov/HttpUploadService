@@ -61,7 +61,8 @@ public class UploadControllerTest {
     @Test
     public void testUploadFiles() throws JSONException, IOException, InterruptedException {
         //before
-        int requestCount = 100;
+        long timeTestStart = System.currentTimeMillis();
+        int requestCount = 50;
         byte[] data = TestFileCreator.getTestData();
         deleteFolder(new File(DIR_PATH));
         CountDownLatch latch = new CountDownLatch(requestCount);
@@ -99,10 +100,11 @@ public class UploadControllerTest {
             view.size();
         }
 
-        LOG.info(" ------------- Files loaded ");
+        LOG.info("Files loaded ");
         //after
         Thread.sleep(2000);
         FileValidator fileValidator = new FileValidator();
+        LOG.info(" ****** Time of testUploadFiles execute : {} ms ******",System.currentTimeMillis()-timeTestStart);
         Assert.assertTrue(fileValidator.compareFiles(fileMap, DIR_PATH));
     }
 
