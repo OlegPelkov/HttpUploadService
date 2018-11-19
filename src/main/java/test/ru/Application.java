@@ -32,6 +32,7 @@ public class Application {
     public ThreadPool threadPull()
     {
         try {
+            ThreadPool.getInstance().setThreadsCount(8);
             ThreadPool.getInstance().start();
         } catch (ExecutionException e) {
             e.printStackTrace();

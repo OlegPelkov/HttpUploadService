@@ -31,10 +31,6 @@ public class RequestDataChannel extends DataChannel{
         return timeDuration.get();
     }
 
-    public int getWritedBlocks() {
-        return countWrittenBlocks.get();
-    }
-
     public int incrementBlockCount() {
        return this.countWrittenBlocks.incrementAndGet();
     }
@@ -68,7 +64,4 @@ public class RequestDataChannel extends DataChannel{
         return nextBytePoint.get();
     }
 
-    public int size() {
-        return queue.size();
-    }
 }

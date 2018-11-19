@@ -7,7 +7,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.HttpClients;
-import org.springframework.http.HttpEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.io.IOException;
@@ -16,14 +17,16 @@ import java.util.concurrent.CountDownLatch;
 
 public class RequestThread extends Thread {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RequestThread.class);
+
     private CountDownLatch latch;
-    private HttpEntity<byte[]> entity;
+    private byte[] body;
     private int port;
     private Header header;
 
-    public RequestThread(CountDownLatch latch, HttpEntity<byte[]> entity, int port, Header header) {
+    public RequestThread(CountDownLatch latch, byte[] body, int port, Header header) {
         this.latch = latch;
-        this.entity = entity;
+        this.body = body;
         this.port = port;
         this.header = header;
         start();
@@ -32,16 +35,13 @@ public class RequestThread extends Thread {
     @Override
     public void run() {
         latch.countDown();
-        // ResponseEntity<String> response = new TestRestTemplate().exchange(createURLWithPort("/api/v1/upload"), HttpMethod.POST, entity, String.class);
         HttpClient httpclient = HttpClients.createDefault();
         HttpPost httppost = new HttpPost("http://localhost:" + port + "/api/v1/upload");
-        httppost.setEntity(new ByteArrayEntity(entity.getBody()));
+        httppost.setEntity(new ByteArrayEntity(body));
         httppost.setHeader(header);
-        //Execute and get the response.
         try {
             HttpResponse response = httpclient.execute(httppost);
             org.apache.http.HttpEntity responseEntity = response.getEntity();
-
             if (responseEntity != null) {
                 InputStream instream = null;
                 try {
@@ -51,7 +51,7 @@ public class RequestThread extends Thread {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("Error {}",e);
         }
 
     }

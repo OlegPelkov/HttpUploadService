@@ -58,24 +58,31 @@ public class UploadControllerTest {
         JSONAssert.assertEquals(expected, response.getBody(), false);
     }
 
+
+    /**
+     *
+     * The test generates the DataFile.dat file with data and runs requests by requestCount value.
+     * Test waits for the download to complete across a request /v1/upload/progress.
+     * Then checks that all bytes are loaded
+     *
+     * **/
     @Test
     public void testUploadFiles() throws JSONException, IOException, InterruptedException {
-        //before
+        //given
         long timeTestStart = System.currentTimeMillis();
-        int requestCount = 16;
+        int requestCount = 50;
         byte[] data = TestFileCreator.getTestData();
+
         deleteFolder(new File(DIR_PATH));
         CountDownLatch latch = new CountDownLatch(requestCount);
         List<RequestThread> requestThreadList = new ArrayList<>();
+
         Map<String, Integer> fileMap = new HashMap<>();
         for (int i = 0; i < requestCount; i++) {
-            HttpHeaders headers = new HttpHeaders();
             String fileName = "DataFile" + i + ".dat";
-            headers.add("X-Upload-File", fileName);
             fileMap.put(fileName,data.length);
-            HttpEntity<byte[]> entity = new HttpEntity<>(data, headers);
             Header header = new BasicHeader("X-Upload-File", fileName);
-            requestThreadList.add(new RequestThread(latch, entity, port, header));
+            requestThreadList.add(new RequestThread(latch, data, port, header));
         }
         try {
             latch.await();
@@ -83,6 +90,8 @@ public class UploadControllerTest {
             LOG.error("Error {}", e);
             requestThreadList.clear();
         }
+
+        //when
         boolean threadsTerminate = false;
         while(!threadsTerminate) {
             for (RequestThread requestThread : requestThreadList) {
@@ -100,8 +109,8 @@ public class UploadControllerTest {
             view.size();
         }
 
+        //then
         LOG.info("Files loaded ");
-        //after
         Thread.sleep(2000);
         FileValidator fileValidator = new FileValidator();
         LOG.info(" ****** Time of testUploadFiles execute : {} ms ******",System.currentTimeMillis()-timeTestStart);

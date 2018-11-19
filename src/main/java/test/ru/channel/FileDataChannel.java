@@ -1,27 +1,13 @@
 package test.ru.channel;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import test.ru.fileAttributs.FileAttribute;
-import test.ru.utils.Utils;
-import test.ru.workThreads.DataBlock;
-
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.time.Duration;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
  * Data channel between thread and file;
  **/
 
 public class FileDataChannel extends DataChannel {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FileDataChannel.class);
-
-    private AtomicBoolean openFile = new AtomicBoolean(false);
-    private RandomAccessFile fileDest = null;
     private final long timeStartUpload;
 
     public FileDataChannel(FileAttribute file) {
@@ -38,7 +24,7 @@ public class FileDataChannel extends DataChannel {
     }
 
     public int incrementBlockCount() {
-      return this.countWrittenBlocks.incrementAndGet();
+        return this.countWrittenBlocks.incrementAndGet();
     }
 
     @Override
@@ -46,35 +32,12 @@ public class FileDataChannel extends DataChannel {
         return timeDuration.get();
     }
 
-    public boolean isOpenFile() {
-        return openFile.get();
-    }
-
-    public void setOpenFile(boolean newValue) {
-        openFile.set(newValue);
-    }
-
-    public boolean tryLock() {
-        return lock.tryLock();
-    }
-
-    public void unlock() {
-        lock.unlock();
-    }
-
     public FileAttribute getFileAttribute() {
         return file;
     }
 
-    public void closeDestFile() throws IOException {
-        if (fileDest != null) {
-            fileDest.close();
-        }
-        setOpenFile(false);
-    }
-
     public void updateTime() throws IOException {
-        timeDuration.set(System.currentTimeMillis()-timeStartUpload);
+        timeDuration.set(System.currentTimeMillis() - timeStartUpload);
     }
 
 }

@@ -30,8 +30,8 @@ public class TaskHandlerThread implements Runnable {
         this.number = number;
     }
 
-    public DataBlock getDataBlock(RequestDataChannel requestDataChannel){
-        if(requestDataChannel.tryLock()) {
+    private DataBlock getDataBlock(RequestDataChannel requestDataChannel) {
+        if (requestDataChannel.tryLock()) {
             try {
                 int bytePoint = requestDataChannel.getNextBytePoint();
                 byte[] buffer = null;
@@ -47,7 +47,7 @@ public class TaskHandlerThread implements Runnable {
     }
 
     private RandomAccessFile getFileWriter(String fileName) throws IOException {
-        if(!fileMap.containsKey(fileName)) {
+        if (!fileMap.containsKey(fileName)) {
             File dir = new File(Utils.DIR_PATH);
             dir.mkdir();
             RandomAccessFile fileDest = new RandomAccessFile(new File("").getAbsolutePath() + Utils.DIR_NAME + File.separator + fileName, "rw");
@@ -63,40 +63,39 @@ public class TaskHandlerThread implements Runnable {
         LOG.info("{}-{} started", TaskHandlerThread.class.getSimpleName(), number);
         RequestChannelMap requestChannelMap = RequestChannelMap.getInstance();
         FileChannelMap fileChannelMap = FileChannelMap.getInstance();
-
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 for (Map.Entry<String, RequestDataChannel> entry : requestChannelMap.entrySet()) {
                     FileDataChannel currentFileChannel = fileChannelMap.get(entry.getKey());
                     if (currentFileChannel != null) {
                         RequestDataChannel requestDataChannel = entry.getValue();
-                        DataBlock dataBlock = null;
+                        DataBlock dataBlock;
                         while ((dataBlock = getDataBlock(requestDataChannel)) != null) {
-                            LOG.error("ThreadNum : {} point {}", number, dataBlock.getOffset());
+                            LOG.debug("ThreadNum : {} point {}", number, dataBlock.getOffset());
                             RandomAccessFile fileDest = getFileWriter(requestDataChannel.getFileAttribute().getFileName());
                             fileDest.seek(dataBlock.getOffset());
                             fileDest.write(dataBlock.getData());
                             currentFileChannel.updateTime();
                             currentFileChannel.addWritedBytes(dataBlock.getData().length);
                             requestDataChannel.addWritedBytes(dataBlock.getData().length);
-                            int block = currentFileChannel.incrementBlockCount();
                             requestDataChannel.incrementBlockCount();
+                            int block = currentFileChannel.incrementBlockCount();
                             LOG.debug("ThreadNum :{} write {} bytes in {} block to {} ", number, dataBlock.getData().length, block, requestDataChannel.getFileAttribute().getFileName());
-                            Thread.sleep(50);
+                            Thread.sleep(10);
                         }
                         if (currentFileChannel.getCountWrittenBytes() == requestDataChannel.getFileAttribute().getSize()) {
                             RandomAccessFile fileDest = fileMap.get(requestDataChannel.getFileAttribute().getFileName());
-                            fileDest.close();
                             requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
                             fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
-                            LOG.info("Success File Writed {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
+                            fileDest.close();
+                            LOG.info("File {} successfully written {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
                         }
                     }
                 }
                 Thread.sleep(10);
             } catch (Exception e) {
                 LOG.error("Error {}", e);
-                if(e instanceof InterruptedException){
+                if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                 }
             }
