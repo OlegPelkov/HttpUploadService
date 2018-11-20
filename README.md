@@ -1,7 +1,7 @@
 # HttpUploadService
 HttpUploadService
 
-Implement HTTP service for file upload. Service supports parallel upload of multiple files.
+HTTP service for file upload. Service supports parallel upload of multiple files.
 File name is defined with custom HTTP header X-Upload-File:
 Server supports parallel upload up to 50 files each of size 50 MB
 
@@ -15,14 +15,14 @@ Content-Length: 1024
 ```
 
 ## Status
-For each file count transfered bytes. Expose data on HTTP endpoint only for active uploads:
+For each file count transfered bytes.
 
 ```
 GET /api/v1/upload/progress HTTP/1.1
 Host: localhost:9090
 ```
 
-For each file observe upload duration. Expose data on HTTP endpoint:
+For each file observe upload duration.
 
 ```
 GET /api/v1/upload/duration
