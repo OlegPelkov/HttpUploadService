@@ -41,9 +41,7 @@ public class RequestThread extends Thread {
     @Override
     public void run() {
         latch.countDown();
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setValidateAfterInactivity(25000000);
-        HttpClient httpclient = HttpClientBuilder.create().setConnectionManager(connectionManager).setRetryHandler(new CustomHttpRequestRetryHandler()).build();
+        HttpClient httpclient = HttpClientBuilder.create().setRetryHandler(new CustomHttpRequestRetryHandler()).build();
         HttpPost httppost = new HttpPost("http://localhost:" + port + "/api/v1/upload");
         httppost.setEntity(new ByteArrayEntity(body));
         httppost.setHeader(header);

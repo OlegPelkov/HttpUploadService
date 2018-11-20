@@ -59,6 +59,10 @@ public class TaskHandlerThread implements Runnable {
         return fileMap.get(fileName);
     }
 
+
+    /**
+    * Thread take dataBlock from requestDataChannel and write it to file by fileName at offset position
+    * **/
     @Override
     public void run() {
         LOG.info("{}-{} started", TaskHandlerThread.class.getSimpleName(), number);

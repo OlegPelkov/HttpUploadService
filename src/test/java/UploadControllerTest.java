@@ -70,7 +70,7 @@ public class UploadControllerTest {
     public void testUploadFiles() throws JSONException, IOException, InterruptedException {
         //given
         long timeTestStart = System.currentTimeMillis();
-        int requestCount = 100;
+        int requestCount = 50;
         byte[] data = TestFileCreator.getTestData();
 
         deleteFolder(new File(DIR_PATH));

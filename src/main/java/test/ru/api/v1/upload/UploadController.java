@@ -56,6 +56,7 @@ public class UploadController {
                 requestChannelMap.putIfAbsent(requestDataChannel.getFileAttribute().getFileName(), requestDataChannel);
                 FileDataChannel currentFileChannel = new FileDataChannel(requestDataChannel.getFileAttribute());
                 fileChannelMap.putIfAbsent(currentFileChannel.getFileAttribute().getFileName(), currentFileChannel);
+                LOG.info("Start upload process for :{} size:{}", fileName, size);
                 if (isExist(fileName) && !deleteOldFile(fileName)) {
                     LOG.error("Can not delete old file {}",fileName);
                 }
@@ -77,19 +78,6 @@ public class UploadController {
                 if (bytesCountReaded != size) {
                     throw new Exception("Error byte count transfer");
                 }
-/*
-                while ((bytesRead = bis.read(buffer)) > 0) {
-                    byte[] transferBuffer = new byte[bytesRead];
-                    System.arraycopy(buffer, 0, transferBuffer, 0, bytesRead);
-                    requestDataChannel.add(transferBuffer);
-                    countOfOperations++;
-                    bytesCountReaded += bytesRead;
-                    LOG.debug("Write to requestDataChannel {} bytes {} block {}", fileName, bytesRead, countOfOperations);
-                    Thread.sleep(10);
-                }
-                if (bytesCountReaded != size) {
-                    throw new Exception("Error byte count transfer");
-                }*/
             } else {
                 return LogPostResponse("/v1/upload:", "Error load " + fileName + " size of file more then 50mb ");
             }
