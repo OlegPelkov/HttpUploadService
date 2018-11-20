@@ -18,9 +18,9 @@ public class Utils {
         StringBuilder sb = new StringBuilder();
         long seconds = duration / 1000 % 60;
         long millis = duration % 1000 / 100;
-        sb.append("upload_duration{id=”");
+        sb.append("upload_duration{id=\"");
         sb.append(id);
-        sb.append("”} ");
+        sb.append("\"} ");
         sb.append(seconds);
         sb.append(".");
         sb.append(millis);
