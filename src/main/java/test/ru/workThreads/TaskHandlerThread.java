@@ -94,8 +94,16 @@ public class TaskHandlerThread implements Runnable {
                             requestChannelMap.remove(requestDataChannel.getFileAttribute().getFileName());
                             fileChannelMap.remove(currentFileChannel.getFileAttribute().getFileName());
                             fileDest.close();
+                            fileMap.remove(requestDataChannel.getFileAttribute().getFileName());
                             LOG.info("File {} successfully written {} size {} ThreadNum {}", currentFileChannel.getFileAttribute().getFileName(), currentFileChannel.getCountWrittenBytes(), number);
                         }
+                    }
+                }
+                for (Map.Entry<String, RandomAccessFile> fileEntry : fileMap.entrySet()) {
+                    if(!requestChannelMap.containsKey(fileEntry.getKey())){
+                        fileEntry.getValue().close();
+                        fileMap.remove(fileEntry.getKey());
+
                     }
                 }
                 Thread.sleep(10);

@@ -38,14 +38,14 @@ public class UploadController {
 
     @RequestMapping(value = "/v1/upload", method = RequestMethod.POST, consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public String uploadPost(@RequestHeader(name = "X-Upload-File", required = true) String fileName,
-                             @RequestHeader(name = "Content-Length", required = true) Integer size, HttpServletRequest request) {
+                             @RequestHeader(name = "Content-Length", required = true) Integer size, HttpServletRequest request) throws IOException {
 
         LOG.info("POST REQUEST: /v1/upload: filename:{} size:{}", fileName, size);
 
         int bytesCountReaded = 0;
         int countOfOperations = 0;
-        int bytesRead = 0;
-        BufferedInputStream  bis;
+        int bytesRead = 1;
+        InputStream is;
 
         try {
             if (size > 0 && size <= MAX_FILE_SIZE) {
@@ -58,22 +58,25 @@ public class UploadController {
                 fileChannelMap.putIfAbsent(currentFileChannel.getFileAttribute().getFileName(), currentFileChannel);
                 LOG.info("Start upload process for :{} size:{}", fileName, size);
                 if (isExist(fileName) && !deleteOldFile(fileName)) {
-                    LOG.error("Can not delete old file {}",fileName);
+                    LOG.error("Can not delete old file {}", fileName);
                 }
-                bis = new BufferedInputStream(request.getInputStream());
-                int available;
-                while ((available = bis.available())>0){
-                    if(FreeSpaceCounter.getInstance().isHaveFreeSpace()) {
-                        byte[] buffer = new byte[available];
-                        bis.read(buffer, 0, available);
-                        requestDataChannel.add(buffer);
+                is = request.getInputStream();
+                byte[] buffer = new byte[size];
+                boolean read = true;
+                while (read && bytesCountReaded<size) {
+                    if ((bytesRead = is.read(buffer)) > 0 && FreeSpaceCounter.getInstance().isHaveFreeSpace()) {
+                        byte[] transferBuffer = new byte[bytesRead];
+                        System.arraycopy(buffer, 0, transferBuffer, 0, bytesRead);
+                        requestDataChannel.add(transferBuffer);
                         countOfOperations++;
                         bytesCountReaded += bytesRead;
-                        FreeSpaceCounter.getInstance().addAndGet(bytesCountReaded);
+                        FreeSpaceCounter.getInstance().add(bytesCountReaded);
                         LOG.debug("Write to requestDataChannel {} bytes {} block {}", fileName, bytesRead, countOfOperations);
                         Thread.sleep(10);
+                    } else {
+                        LOG.debug("Wait ()");
+                        Thread.sleep(200);
                     }
-                    Thread.sleep(200);
                 }
             } else {
                 return LogPostResponse("/v1/upload:", "Error load " + fileName + " size of file more then 50mb ");

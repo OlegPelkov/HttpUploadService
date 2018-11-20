@@ -1,7 +1,5 @@
 package test.ru.channelMaps;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 public class FreeSpaceCounter {
 
     public static class SingletonHolder {
@@ -12,20 +10,20 @@ public class FreeSpaceCounter {
         return FreeSpaceCounter.SingletonHolder.INSTANCE;
     }
 
-    public long FREE_SPACE = 5000080*20;
+    public long FREE_SPACE = 100241388*20;
 
-    private AtomicLong usedSpace =  new AtomicLong(0);
+    private volatile long usedSpace = 0L;
 
-    public long addAndGet(long delta) {
-        return usedSpace.addAndGet(delta);
+    public synchronized long add(long delta) {
+        return usedSpace+=delta;
     }
 
-    public boolean isHaveFreeSpace() {
-        return usedSpace.get()< FREE_SPACE;
+    public synchronized boolean isHaveFreeSpace() {
+        return usedSpace< FREE_SPACE;
     }
 
-    public void subtract(long delta) {
-        while (!usedSpace.compareAndSet(usedSpace.get(), usedSpace.get()-delta)){}
+    public synchronized void subtract(long delta) {
+        usedSpace-=delta;
     }
 
 }
