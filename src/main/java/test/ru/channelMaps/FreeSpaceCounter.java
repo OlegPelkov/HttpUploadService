@@ -12,7 +12,7 @@ public class FreeSpaceCounter {
         return FreeSpaceCounter.SingletonHolder.INSTANCE;
     }
 
-    public long FREE_SPACE = 100008*20;
+    public long FREE_SPACE = 1000080*20;
 
     private AtomicLong usedSpace =  new AtomicLong(0);
 

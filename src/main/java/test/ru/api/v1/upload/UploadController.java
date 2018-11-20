@@ -75,9 +75,6 @@ public class UploadController {
                     }
                     Thread.sleep(200);
                 }
-                if (bytesCountReaded != size) {
-                    throw new Exception("Error byte count transfer");
-                }
             } else {
                 return LogPostResponse("/v1/upload:", "Error load " + fileName + " size of file more then 50mb ");
             }

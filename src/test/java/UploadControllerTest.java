@@ -1,6 +1,5 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.json.JSONException;
@@ -21,15 +20,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import test.ru.Application;
 import test.ru.view.ProgressView;
-import test.ru.workThreads.TaskHandlerThread;
 import testUtils.FileValidator;
 import testUtils.RequestThread;
 import testUtils.TestFileCreator;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
